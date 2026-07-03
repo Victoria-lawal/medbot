@@ -4,3 +4,5 @@ opencv-python
 numpy
 pyttsx3
 SpeechRecognition
+vosk
+pyaudio
