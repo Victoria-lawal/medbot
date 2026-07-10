@@ -48,10 +48,16 @@ def listen_for_confirmation(timeout=5):
             print("Listening (online)...")
             audio = recognizer.listen(source, timeout=timeout)
         text = recognizer.recognize_google(audio).lower()
-    except (sr.RequestError, ConnectionError, OSError):
-        print("Online STT unavailable, switching to offline...")
+        print(f"[DEBUG] Heard: '{text}'")
+    except (sr.RequestError, ConnectionError, OSError) as e:
+        print(f"[DEBUG] Online STT failed: {e}, switching to offline...")
         text = listen_offline(timeout=timeout).lower()
-    except (sr.WaitTimeoutError, sr.UnknownValueError):
+        print(f"[DEBUG] Offline heard: '{text}'")
+    except sr.WaitTimeoutError:
+        print("[DEBUG] Timed out — no speech detected in time")
+        return None
+    except sr.UnknownValueError:
+        print("[DEBUG] Speech detected but not understood")
         return None
     if not text:
         return None
