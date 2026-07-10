@@ -26,7 +26,7 @@ def get_vosk_model():
 def listen_offline(timeout=5):
     from vosk import KaldiRecognizer
     recognizer = sr.Recognizer()
-    mic = sr.Microphone()
+    mic = sr.Microphone(device_index=1)
     model = get_vosk_model()
     vosk_rec = KaldiRecognizer(model, 16000)
     with mic as source:
@@ -40,7 +40,7 @@ def listen_offline(timeout=5):
 
 def listen_for_confirmation(timeout=5):
     recognizer = sr.Recognizer()
-    mic = sr.Microphone()
+    mic = sr.Microphone(device_index=1)  # snd_rpi_googlevoicehat_soundcar
     text = None
     try:
         with mic as source:
