@@ -40,13 +40,15 @@ def listen_offline(timeout=5):
 
 def listen_for_confirmation(timeout=5):
     recognizer = sr.Recognizer()
-    mic = sr.Microphone(device_index=1)  # snd_rpi_googlevoicehat_soundcar
+    recognizer.energy_threshold = 100  # much lower than default (300), tune from here
+    recognizer.dynamic_energy_threshold = False  # stop auto-recalibrating upward
+    mic = sr.Microphone(device_index=1)
     text = None
     try:
         with mic as source:
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            print(f"[DEBUG] Energy threshold: {recognizer.energy_threshold}")
             print("Listening (online)...")
-            audio = recognizer.listen(source, timeout=timeout)
+            audio = recognizer.listen(source, timeout=timeout, phrase_time_limit=5)
         text = recognizer.recognize_google(audio).lower()
         print(f"[DEBUG] Heard: '{text}'")
     except (sr.RequestError, ConnectionError, OSError) as e:
