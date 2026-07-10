@@ -60,3 +60,20 @@ def handle_frame(img):
         else:
             say("Okay, not enrolling.")
             show_text("Enrollment cancelled")
+from patient_id.vitals import read_vitals
+
+def report_vitals():
+    say("Please place your finger on the sensor for a reading.")
+    show_text("Reading vitals...")
+    bpm, spo2 = read_vitals(duration=10, sample_rate=25, settle_time=4)
+
+    if bpm and spo2:
+        message = f"Your heart rate is {bpm} beats per minute, and your oxygen level is {spo2} percent."
+        say(message)
+        show_text(f"HR: {bpm} bpm", f"SpO2: {spo2}%")
+    elif bpm:
+        say(f"Your heart rate is {bpm} beats per minute. I could not get a reliable oxygen reading.")
+        show_text(f"HR: {bpm} bpm", "SpO2: unavailable")
+    else:
+        say("I couldn't get a clear reading. Please make sure your finger is placed firmly and try again.")
+        show_text("Reading failed", "Please retry")
