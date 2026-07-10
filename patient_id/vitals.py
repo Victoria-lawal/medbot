@@ -118,13 +118,36 @@ def read_vitals(duration=8, sample_rate=25):
     return bpm, spo2
 
 if __name__ == "__main__":
+    import numpy as np
     print("Place your finger on the sensor. Reading for 8 seconds...")
-    bpm, spo2 = read_vitals()
-    if bpm:
-        print(f"Heart rate: {bpm} bpm")
-    else:
-        print("Could not get a stable heart rate reading")
-    if spo2:
-        print(f"SpO2: {spo2}%")
-    else:
-        print("Could not get a stable SpO2 reading")
+    setup_sensor()
+
+    sample_rate = 25
+    duration = 8
+    ir_window = deque(maxlen=duration * sample_rate)
+    red_window = deque(maxlen=duration * sample_rate)
+
+    start = time.time()
+    finger_detected_count = 0
+    total_samples = 0
+
+    while time.time() - start < duration:
+        red, ir = read_fifo()
+        total_samples += 1
+        if detect_finger(ir):
+            finger_detected_count += 1
+            ir_window.append(ir)
+            red_window.append(red)
+        time.sleep(1.0 / sample_rate)
+
+    print(f"Total samples: {total_samples}, finger detected: {finger_detected_count} ({finger_detected_count/total_samples*100:.1f}%)")
+    print(f"IR window size: {len(ir_window)}")
+    if len(ir_window) > 0:
+        ir_arr = np.array(list(ir_window))
+        red_arr = np.array(list(red_window))
+        print(f"IR min/max/mean/std: {ir_arr.min()}/{ir_arr.max()}/{ir_arr.mean():.0f}/{ir_arr.std():.0f}")
+        print(f"Red min/max/mean/std: {red_arr.min()}/{red_arr.max()}/{red_arr.mean():.0f}/{red_arr.std():.0f}")
+
+    bpm = calc_bpm(list(ir_window), sample_rate) if len(ir_window) >= sample_rate * 3 else None
+    spo2 = calc_spo2(list(red_window), list(ir_window)) if len(ir_window) >= sample_rate * 3 else None
+    print(f"BPM: {bpm}, SpO2: {spo2}")
