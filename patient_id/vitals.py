@@ -87,8 +87,8 @@ def calc_spo2(red_window, ir_window):
     spo2 = max(0, min(100, spo2))
     return round(spo2, 1)
 
-def read_vitals(duration=8, sample_rate=25):
-    """Collects samples for `duration` seconds, returns (bpm, spo2) or (None, None) if no valid reading."""
+def read_vitals(duration=10, sample_rate=25, settle_time=2):
+    """Collects samples for `duration` seconds (plus a settle_time discard period), returns (bpm, spo2)."""
     setup_sensor()
     ir_window = deque(maxlen=duration * sample_rate)
     red_window = deque(maxlen=duration * sample_rate)
@@ -97,20 +97,20 @@ def read_vitals(duration=8, sample_rate=25):
     finger_detected_count = 0
     total_samples = 0
 
-    while time.time() - start < duration:
+    while time.time() - start < (duration + settle_time):
         red, ir = read_fifo()
+        elapsed = time.time() - start
         total_samples += 1
         if detect_finger(ir):
             finger_detected_count += 1
-            ir_window.append(ir)
-            red_window.append(red)
+            if elapsed >= settle_time:  # discard the settling period
+                ir_window.append(ir)
+                red_window.append(red)
         time.sleep(1.0 / sample_rate)
 
-    # require finger present for most of the reading window
     if total_samples == 0 or finger_detected_count / total_samples < 0.7:
         return None, None
-
-    if len(ir_window) < sample_rate * 3:  # need a few seconds of real data minimum
+    if len(ir_window) < sample_rate * 3:
         return None, None
 
     bpm = calc_bpm(list(ir_window), sample_rate)
@@ -119,35 +119,6 @@ def read_vitals(duration=8, sample_rate=25):
 
 if __name__ == "__main__":
     import numpy as np
-    print("Place your finger on the sensor. Reading for 8 seconds...")
-    setup_sensor()
-
-    sample_rate = 25
-    duration = 8
-    ir_window = deque(maxlen=duration * sample_rate)
-    red_window = deque(maxlen=duration * sample_rate)
-
-    start = time.time()
-    finger_detected_count = 0
-    total_samples = 0
-
-    while time.time() - start < duration:
-        red, ir = read_fifo()
-        total_samples += 1
-        if detect_finger(ir):
-            finger_detected_count += 1
-            ir_window.append(ir)
-            red_window.append(red)
-        time.sleep(1.0 / sample_rate)
-
-    print(f"Total samples: {total_samples}, finger detected: {finger_detected_count} ({finger_detected_count/total_samples*100:.1f}%)")
-    print(f"IR window size: {len(ir_window)}")
-    if len(ir_window) > 0:
-        ir_arr = np.array(list(ir_window))
-        red_arr = np.array(list(red_window))
-        print(f"IR min/max/mean/std: {ir_arr.min()}/{ir_arr.max()}/{ir_arr.mean():.0f}/{ir_arr.std():.0f}")
-        print(f"Red min/max/mean/std: {red_arr.min()}/{red_arr.max()}/{red_arr.mean():.0f}/{red_arr.std():.0f}")
-
-    bpm = calc_bpm(list(ir_window), sample_rate) if len(ir_window) >= sample_rate * 3 else None
-    spo2 = calc_spo2(list(red_window), list(ir_window)) if len(ir_window) >= sample_rate * 3 else None
+    print("Place your finger on the sensor. Settling, then reading for 10 seconds...")
+    bpm, spo2 = read_vitals(duration=10, sample_rate=25, settle_time=2)
     print(f"BPM: {bpm}, SpO2: {spo2}")
