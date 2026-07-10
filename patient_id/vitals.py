@@ -45,27 +45,32 @@ def detect_finger(ir_value, threshold=20000):
     return ir_value > threshold
 
 def calc_bpm(ir_window, sample_rate=25):
-    """Peak detection on IR signal after removing baseline drift."""
     ir_arr = np.array(ir_window)
-    baseline = np.convolve(ir_arr, np.ones(15)/15, mode='same')  # rolling average as baseline
+    baseline = np.convolve(ir_arr, np.ones(15)/15, mode='same')
     ac_signal = ir_arr - baseline
 
-    # simple peak detection: point higher than both neighbors and above a noise threshold
     std = np.std(ac_signal)
+    print(f"[DEBUG] AC signal std: {std:.2f}, min: {ac_signal.min():.2f}, max: {ac_signal.max():.2f}")
+
     peaks = []
     for i in range(1, len(ac_signal) - 1):
         if ac_signal[i] > ac_signal[i-1] and ac_signal[i] > ac_signal[i+1] and ac_signal[i] > std * 0.5:
             peaks.append(i)
 
+    print(f"[DEBUG] Peaks found: {len(peaks)} at indices {peaks}")
+
     if len(peaks) < 2:
         return None
 
-    intervals = np.diff(peaks) / sample_rate  # seconds between peaks
+    intervals = np.diff(peaks) / sample_rate
     avg_interval = np.mean(intervals)
+    print(f"[DEBUG] Intervals (sec): {intervals}, avg: {avg_interval:.3f}")
+
     if avg_interval <= 0:
         return None
     bpm = 60.0 / avg_interval
-    if 40 <= bpm <= 180:  # sane human range, filter out noise artifacts
+    print(f"[DEBUG] Raw BPM before range check: {bpm:.1f}")
+    if 40 <= bpm <= 180:
         return round(bpm, 1)
     return None
 
