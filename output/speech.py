@@ -4,7 +4,15 @@ import json
 import os
 
 def say(text):
-    subprocess.run(['espeak', '-v', 'en-us', '-s', '150', text])
+    espeak = subprocess.Popen(
+        ['espeak', '-v', 'en-us', '-s', '150', '--stdout', text],
+        stdout=subprocess.PIPE
+    )
+    subprocess.run(
+        ['aplay', '-D', 'plughw:CARD=sndrpigooglevoi,DEV=0'],
+        stdin=espeak.stdout
+    )
+    espeak.stdout.close()
 
 def get_vosk_model():
     from vosk import Model
