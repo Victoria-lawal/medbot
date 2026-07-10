@@ -8,11 +8,13 @@ def say(text):
         ['espeak', '-v', 'en-us', '-s', '150', '--stdout', text],
         stdout=subprocess.PIPE
     )
-    subprocess.run(
+    aplay = subprocess.Popen(
         ['aplay', '-D', 'plughw:CARD=sndrpigooglevoi,DEV=0'],
         stdin=espeak.stdout
     )
-    espeak.stdout.close()
+    espeak.stdout.close()  # allow espeak to receive SIGPIPE if aplay exits early
+    aplay.wait()
+    espeak.wait()
 
 def get_vosk_model():
     from vosk import Model
