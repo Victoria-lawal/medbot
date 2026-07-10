@@ -48,15 +48,11 @@ def calc_bpm(ir_window, sample_rate=25):
     ir_arr = np.array(ir_window)
     baseline = np.convolve(ir_arr, np.ones(15)/15, mode='same')
     ac_signal = ir_arr - baseline
-
-    edge_trim = 15
-    ac_signal = ac_signal[edge_trim:-edge_trim]
+    ac_signal = ac_signal[15:-15]
 
     std = np.std(ac_signal)
-    print(f"[DEBUG] AC signal std: {std:.2f}, min: {ac_signal.min():.2f}, max: {ac_signal.max():.2f}")
-
-    min_distance_samples = int(sample_rate * 0.4)  # ~150 bpm max, refuse anything faster
-    threshold = std * 1.2  # stricter amplitude requirement
+    min_distance_samples = int(sample_rate * 0.4)
+    threshold = std * 1.2
 
     peaks = []
     last_peak = -min_distance_samples
@@ -67,19 +63,14 @@ def calc_bpm(ir_window, sample_rate=25):
             peaks.append(i)
             last_peak = i
 
-    print(f"[DEBUG] Peaks found: {len(peaks)} at indices {peaks}")
-
     if len(peaks) < 2:
         return None
 
     intervals = np.diff(peaks) / sample_rate
     avg_interval = np.mean(intervals)
-    print(f"[DEBUG] Intervals (sec): {intervals}, avg: {avg_interval:.3f}")
-
     if avg_interval <= 0:
         return None
     bpm = 60.0 / avg_interval
-    print(f"[DEBUG] Raw BPM before range check: {bpm:.1f}")
     if 40 <= bpm <= 180:
         return round(bpm, 1)
     return None
@@ -133,6 +124,13 @@ def read_vitals(duration=10, sample_rate=25, settle_time=2):
     return bpm, spo2
 
 if __name__ == "__main__":
-    print("Place your finger on the sensor. Settling, then reading for 10 seconds...")
+    print("Place your finger on the sensor. Reading...")
     bpm, spo2 = read_vitals(duration=10, sample_rate=25, settle_time=4)
-    print(f"BPM: {bpm}, SpO2: {spo2}")
+    if bpm:
+        print(f"Heart rate: {bpm} bpm")
+    else:
+        print("Could not get a stable heart rate reading")
+    if spo2:
+        print(f"SpO2: {spo2}%")
+    else:
+        print("Could not get a stable SpO2 reading")
