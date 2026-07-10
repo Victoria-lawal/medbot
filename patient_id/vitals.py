@@ -49,17 +49,23 @@ def calc_bpm(ir_window, sample_rate=25):
     baseline = np.convolve(ir_arr, np.ones(15)/15, mode='same')
     ac_signal = ir_arr - baseline
 
-    # trim edges to avoid convolution boundary artifacts
     edge_trim = 15
     ac_signal = ac_signal[edge_trim:-edge_trim]
 
     std = np.std(ac_signal)
     print(f"[DEBUG] AC signal std: {std:.2f}, min: {ac_signal.min():.2f}, max: {ac_signal.max():.2f}")
 
+    min_distance_samples = int(sample_rate * 0.4)  # ~150 bpm max, refuse anything faster
+    threshold = std * 1.2  # stricter amplitude requirement
+
     peaks = []
+    last_peak = -min_distance_samples
     for i in range(1, len(ac_signal) - 1):
-        if ac_signal[i] > ac_signal[i-1] and ac_signal[i] > ac_signal[i+1] and ac_signal[i] > std * 0.5:
+        if (ac_signal[i] > ac_signal[i-1] and ac_signal[i] > ac_signal[i+1]
+                and ac_signal[i] > threshold
+                and (i - last_peak) >= min_distance_samples):
             peaks.append(i)
+            last_peak = i
 
     print(f"[DEBUG] Peaks found: {len(peaks)} at indices {peaks}")
 
