@@ -49,6 +49,10 @@ def calc_bpm(ir_window, sample_rate=25):
     baseline = np.convolve(ir_arr, np.ones(15)/15, mode='same')
     ac_signal = ir_arr - baseline
 
+    # trim edges to avoid convolution boundary artifacts
+    edge_trim = 15
+    ac_signal = ac_signal[edge_trim:-edge_trim]
+
     std = np.std(ac_signal)
     print(f"[DEBUG] AC signal std: {std:.2f}, min: {ac_signal.min():.2f}, max: {ac_signal.max():.2f}")
 
@@ -123,7 +127,6 @@ def read_vitals(duration=10, sample_rate=25, settle_time=2):
     return bpm, spo2
 
 if __name__ == "__main__":
-    import numpy as np
     print("Place your finger on the sensor. Settling, then reading for 10 seconds...")
-    bpm, spo2 = read_vitals(duration=10, sample_rate=25, settle_time=2)
+    bpm, spo2 = read_vitals(duration=10, sample_rate=25, settle_time=4)
     print(f"BPM: {bpm}, SpO2: {spo2}")
