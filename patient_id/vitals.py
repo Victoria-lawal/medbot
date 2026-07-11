@@ -2,6 +2,7 @@ import smbus2
 import time
 import numpy as np
 from collections import deque
+from patient_id.temperature import read_temperature
 
 MAX30102_ADDR = 0x57
 REG_INTR_ENABLE_1 = 0x02
@@ -134,3 +135,8 @@ if __name__ == "__main__":
         print(f"SpO2: {spo2}%")
     else:
         print("Could not get a stable SpO2 reading")
+def read_all_vitals(duration=10, sample_rate=25, settle_time=4):
+    """Reads temperature (instant) and BPM/SpO2 (takes ~14s) together."""
+    temp = read_temperature()
+    bpm, spo2 = read_vitals(duration=duration, sample_rate=sample_rate, settle_time=settle_time)
+    return temp, bpm, spo2
