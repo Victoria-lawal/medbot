@@ -1,8 +1,11 @@
 insightface
 onnxruntime
-opencv-python
+opencv-python-headless
 numpy
-pyttsx3
 SpeechRecognition
 vosk
 pyaudio
+smbus2
+RPLCD
+gpiozero
+RPi.GPIO
