@@ -10,11 +10,14 @@ def say(text):
     )
     aplay = subprocess.Popen(
         ['aplay', '-D', 'plughw:CARD=sndrpigooglevoi,DEV=0'],
-        stdin=espeak.stdout
+        stdin=espeak.stdout,
+        stderr=subprocess.PIPE
     )
-    espeak.stdout.close()  # allow espeak to receive SIGPIPE if aplay exits early
-    aplay.wait()
+    espeak.stdout.close()
+    _, aplay_err = aplay.communicate()
     espeak.wait()
+    if aplay.returncode != 0:
+        print(f"[DEBUG] aplay failed (code {aplay.returncode}): {aplay_err.decode()}")
 
 def get_vosk_model():
     from vosk import Model
