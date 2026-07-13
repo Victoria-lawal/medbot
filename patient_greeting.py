@@ -61,6 +61,7 @@ def report_vitals():
 
 def handle_frame(img):
     results = recognize(img)
+    print(f"[DEBUG] Faces detected: {len(results)}, scores: {[r['score'] for r in results]}")
     now = time.time()
 
     if not results:
