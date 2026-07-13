@@ -44,7 +44,7 @@ def listen_for_confirmation(timeout=5):
     recognizer = sr.Recognizer()
     recognizer.energy_threshold = 100
     recognizer.dynamic_energy_threshold = False
-    mic = sr.Microphone(device_index=0)
+    mic = sr.Microphone(device_index=0, sample_rate=48000, chunk_size=1024)
     text = None
     try:
         with mic as source:
