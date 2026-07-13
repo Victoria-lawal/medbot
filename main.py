@@ -4,6 +4,17 @@ from patient_greeting import handle_frame
 
 RECOGNITION_INTERVAL = 0.5  # seconds between recognition passes
 
+def find_camera(candidates=(0, 1, 2)):
+    for i in candidates:
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                print(f"Camera found at index {i}")
+                return cap
+            cap.release()
+    return None
+    
 def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
