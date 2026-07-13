@@ -28,7 +28,7 @@ def get_vosk_model():
 def listen_offline(timeout=5):
     from vosk import KaldiRecognizer
     recognizer = sr.Recognizer()
-    mic = sr.Microphone(device_index=1)
+    mic = sr.Microphone(device_index=0)
     model = get_vosk_model()
     vosk_rec = KaldiRecognizer(model, 16000)
     with mic as source:
@@ -42,9 +42,9 @@ def listen_offline(timeout=5):
 
 def listen_for_confirmation(timeout=5):
     recognizer = sr.Recognizer()
-    recognizer.energy_threshold = 100  # much lower than default (300), tune from here
-    recognizer.dynamic_energy_threshold = False  # stop auto-recalibrating upward
-    mic = sr.Microphone(device_index=1)
+    recognizer.energy_threshold = 100
+    recognizer.dynamic_energy_threshold = False
+    mic = sr.Microphone(device_index=0)
     text = None
     try:
         with mic as source:
