@@ -2,16 +2,15 @@ import time
 from collections import deque
 from patient_id.recognize import recognize
 from patient_id.enroll import enroll_from_camera
-from patient_id.vitals import read_vitals
+from patient_id.vitals import read_all_vitals
 from output.speech import say, listen_for_confirmation
 from output.display import show_text
-from patient_id.vitals import read_all_vitals
-
 
 _history = deque(maxlen=5)
 _last_action = {"outcome": None, "time": 0}
 COOLDOWN_SECONDS = 30
 STABILITY_REQUIRED = 4
+_session_active = False
 
 def _stable_outcome():
     if len(_history) < _history.maxlen:
@@ -60,12 +59,17 @@ def report_vitals():
               " | ".join(display_lines[1:]) if len(display_lines) > 1 else "")
 
 def handle_frame(img):
+    global _session_active
+
     results = recognize(img)
-    print(f"[DEBUG] Faces detected: {len(results)}, scores: {[r['score'] for r in results]}")
     now = time.time()
 
     if not results:
+        _session_active = False  # frame is empty, reset for next person
         return
+
+    if _session_active:
+        return  # already handled this person, wait for them to leave frame
 
     _history.append(results[0]["matched"])
     outcome = _stable_outcome()
@@ -77,6 +81,7 @@ def handle_frame(img):
 
     _last_action["outcome"] = outcome
     _last_action["time"] = now
+    _session_active = True
 
     if outcome != "Unknown":
         message = f"Hello, {outcome}"
