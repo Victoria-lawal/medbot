@@ -3,21 +3,20 @@ import speech_recognition as sr
 import json
 import os
 
-def say(text):
+def say(text, voice="en+f3", speed=150):
     espeak = subprocess.Popen(
-        ['espeak', '-v', 'en-us', '-s', '150', '--stdout', text],
-        stdout=subprocess.PIPE
+        ['espeak', '-v', voice, '-s', str(speed), '--stdout', text],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL
     )
     aplay = subprocess.Popen(
         ['aplay', '-D', 'plughw:CARD=sndrpigooglevoi,DEV=0'],
         stdin=espeak.stdout,
-        stderr=subprocess.PIPE
+        stderr=subprocess.DEVNULL
     )
     espeak.stdout.close()
-    _, aplay_err = aplay.communicate()
+    aplay.wait()
     espeak.wait()
-    if aplay.returncode != 0:
-        print(f"[DEBUG] aplay failed (code {aplay.returncode}): {aplay_err.decode()}")
 
 def get_vosk_model():
     from vosk import Model
