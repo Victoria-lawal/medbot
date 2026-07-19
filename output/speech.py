@@ -42,33 +42,45 @@ def listen_offline(timeout=5):
     result = json.loads(vosk_rec.FinalResult())
     return result.get("text", "")
 
-def listen_for_confirmation(timeout=5):
-    recognizer = sr.Recognizer()
-    recognizer.energy_threshold = 100
-    recognizer.dynamic_energy_threshold = False
-    mic = sr.Microphone(device_index=0, sample_rate=48000, chunk_size=1024)
-    text = None
-    try:
-        with mic as source:
-            print(f"[DEBUG] Energy threshold: {recognizer.energy_threshold}")
-            print("Listening (online)...")
-            audio = recognizer.listen(source, timeout=timeout, phrase_time_limit=5)
-        text = recognizer.recognize_google(audio).lower()
-        print(f"[DEBUG] Heard: '{text}'")
-    except (sr.RequestError, ConnectionError, OSError) as e:
-        print(f"[DEBUG] Online STT failed: {e}, switching to offline...")
-        text = listen_offline(timeout=timeout).lower()
-        print(f"[DEBUG] Offline heard: '{text}'")
-    except sr.WaitTimeoutError:
-        print("[DEBUG] Timed out — no speech detected in time")
+def listen_for_confirmation(timeout=5, retries=2):
+    for attempt in range(retries):
+        recognizer = sr.Recognizer()
+        recognizer.energy_threshold = 100
+        recognizer.dynamic_energy_threshold = False
+        try:
+            mic = sr.Microphone(device_index=0, sample_rate=48000, chunk_size=1024)
+            with mic as source:
+                print(f"[DEBUG] Energy threshold: {recognizer.energy_threshold}")
+                print("Listening (online)...")
+                audio = recognizer.listen(source, timeout=timeout, phrase_time_limit=5)
+            text = recognizer.recognize_google(audio).lower()
+            print(f"[DEBUG] Heard: '{text}'")
+        except (sr.RequestError, ConnectionError, OSError) as e:
+            print(f"[DEBUG] Online STT failed: {e}, switching to offline...")
+            try:
+                text = listen_offline(timeout=timeout).lower()
+                print(f"[DEBUG] Offline heard: '{text}'")
+            except Exception as offline_e:
+                print(f"[DEBUG] Offline STT also failed: {offline_e}")
+                continue
+        except sr.WaitTimeoutError:
+            print("[DEBUG] Timed out — no speech detected in time")
+            return None
+        except sr.UnknownValueError:
+            print("[DEBUG] Speech detected but not understood")
+            return None
+        except Exception as e:
+            print(f"[DEBUG] Mic error (attempt {attempt+1}/{retries}): {e}")
+            time.sleep(0.5)
+            continue
+
+        if not text:
+            return None
+        if "yes" in text or "yeah" in text or "confirm" in text:
+            return True
+        elif "no" in text or "cancel" in text:
+            return False
         return None
-    except sr.UnknownValueError:
-        print("[DEBUG] Speech detected but not understood")
-        return None
-    if not text:
-        return None
-    if "yes" in text or "yeah" in text or "confirm" in text:
-        return True
-    elif "no" in text or "cancel" in text:
-        return False
+
+    print("[DEBUG] All retry attempts failed")
     return None
