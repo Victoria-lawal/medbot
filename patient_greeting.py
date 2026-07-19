@@ -13,7 +13,7 @@ STABILITY_REQUIRED = 4
 _session_active = False
 _prompted_this_session = False
 _empty_frame_count = 0
-EMPTY_FRAMES_TO_RESET = 5  # require 5 consecutive empty frames before resetting session
+EMPTY_FRAMES_TO_RESET = 5
 
 def _stable_outcome():
     if len(_history) < _history.maxlen:
@@ -27,33 +27,6 @@ def _stable_outcome():
     return None
 
 def report_vitals():
-    say("Please place your hand on my left palm for a reading.")
-    show_text("Reading vitals...")
-    temp, bpm, spo2 = read_all_vitals(duration=10, sample_rate=25, settle_time=4)
-    parts = []
-    display_lines = []
-    if temp is not None:
-        parts.append(f"your temperature is {temp} degrees Celsius")
-        display_lines.append(f"Temp: {temp}C")
-    else:
-        display_lines.append("Temp: unavailable")
-    if bpm is not None:
-        parts.append(f"your heart rate is {bpm} beats per minute")
-        display_lines.append(f"HR: {bpm} bpm")
-    else:
-        display_lines.append("HR: unavailable")
-    if spo2 is not None:
-        parts.append(f"your oxygen level is {spo2} percent")
-        display_lines.append(f"SpO2: {spo2}%")
-    else:
-        display_lines.append("SpO2: unavailable")
-    if parts:
-        message = "Here are your readings: " + ", ".join(parts) + "."
-        say(message)
-    else:
-        say("I couldn't get any clear readings. Please make sure your hand is placed firmly and try again.")
-    show_text(display_lines[0] if display_lines else "Reading failed",
-              " | ".join(display_lines[1:]) if len(display_lines) > 1 else "")def report_vitals():
     say("Please place your hand on my left palm for a reading.")
     show_text("Reading vitals...")
     temp, bpm, spo2 = read_all_vitals(duration=10, sample_rate=25, settle_time=4)
@@ -95,7 +68,7 @@ def handle_frame(img):
             _history.clear()
         return
 
-    _empty_frame_count = 0  # a face was seen, reset the miss counter
+    _empty_frame_count = 0
 
     if _session_active:
         return
