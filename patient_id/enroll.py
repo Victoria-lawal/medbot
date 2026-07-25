@@ -38,10 +38,13 @@ def enroll_from_folder(name, folder_path):
     else:
         print(f"Failed to enroll {name} — no usable photos")
 
-def enroll_from_camera(name, num_shots=4, camera_index=0):
+def enroll_from_camera(name, num_shots=4):
     app = get_model()
     gallery = load_gallery()
-    cap = cv2.VideoCapture(camera_index)
+    cap = find_camera()
+    if cap is None:
+        print("Camera not found — check USB connection")
+        return
     embeddings = []
 
     for i in range(num_shots):
