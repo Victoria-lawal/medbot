@@ -3,6 +3,7 @@ import speech_recognition as sr
 import json
 import os
 import time
+import pyaudio
 
 def say(text, voice="en+f3", speed=150):
     espeak = subprocess.Popen(
@@ -43,13 +44,14 @@ def listen_offline(timeout=5):
     result = json.loads(vosk_rec.FinalResult())
     return result.get("text", "")
 
-def listen_for_confirmation(timeout=5, retries=4):
+def listen_for_confirmation(timeout=5, retries=2):
     for attempt in range(retries):
         recognizer = sr.Recognizer()
         recognizer.energy_threshold = 100
         recognizer.dynamic_energy_threshold = False
         try:
             mic = sr.Microphone(device_index=0, sample_rate=48000, chunk_size=1024)
+            mic.CHANNELS = 1  # force mono explicitly, bypassing auto-detection
             with mic as source:
                 print(f"[DEBUG] Energy threshold: {recognizer.energy_threshold}")
                 print("Listening (online)...")
