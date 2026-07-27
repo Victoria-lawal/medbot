@@ -14,10 +14,10 @@ def find_camera(candidates=(0, 1, 2)):
                 return cap
             cap.release()
     return None
-    
+
 def main():
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
+    cap = find_camera()
+    if cap is None:
         print("Camera not found — check USB connection")
         return
     print("Medbot running. Ctrl+C to quit.")
@@ -29,7 +29,7 @@ def main():
                 continue
             now = time.time()
             if now - last_run >= RECOGNITION_INTERVAL:
-                handle_frame(frame)
+                handle_frame(frame, cap)
                 last_run = now
     except KeyboardInterrupt:
         print("Stopping...")
