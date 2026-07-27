@@ -41,35 +41,29 @@ def record_audio(filename="temp_listen.wav", duration=5):
     return filename
 
 def listen_for_confirmation(timeout=5):
+    # First try terminal input via non-blocking wait or simple fallback
     filename = record_audio(duration=timeout)
-    if filename is None:
-        return None
+    
+    if filename is not None and os.path.exists(filename):
+        recognizer = sr.Recognizer()
+        try:
+            with sr.AudioFile(filename) as source:
+                audio = recognizer.record(source)
+            text = recognizer.recognize_google(audio).lower()
+            print(f"[DEBUG] Heard: '{text}'")
+            if any(w in text for w in ["yes", "yeah", "confirm"]):
+                return True
+            elif any(w in text for w in ["no", "cancel"]):
+                return False
+        except Exception as e:
+            print(f"[DEBUG] Voice recognition failed ({e}), falling back to keyboard.")
+        finally:
+            if os.path.exists(filename):
+                os.remove(filename)
 
-    recognizer = sr.Recognizer()
-    text = None
-    try:
-        with sr.AudioFile(filename) as source:
-            audio = recognizer.record(source)
-        text = recognizer.recognize_google(audio).lower()
-        print(f"[DEBUG] Heard: '{text}'")
-    except sr.RequestError as e:
-        print(f"[DEBUG] Online STT failed: {e}, switching to offline...")
-        text = listen_offline_from_file(filename).lower()
-        print(f"[DEBUG] Offline heard: '{text}'")
-    except sr.UnknownValueError:
-        print("[DEBUG] Speech detected but not understood")
-        return None
-    finally:
-        if os.path.exists(filename):
-            os.remove(filename)
-
-    if not text:
-        return None
-    if "yes" in text or "yeah" in text or "confirm" in text:
-        return True
-    elif "no" in text or "cancel" in text:
-        return False
-    return None
+    # Fallback to terminal input if audio failed or wasn't understood
+    user_input = input("[INPUT REQUIRED] Say failed. Type 'y' to enroll or 'n' to cancel: ").strip().lower()
+    return user_input in ['y', 'yes']
 
 def listen_offline_from_file(filename):
     from vosk import KaldiRecognizer
