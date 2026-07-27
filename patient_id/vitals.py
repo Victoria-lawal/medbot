@@ -94,9 +94,13 @@ def calc_spo2(red_window, ir_window):
     spo2 = max(0, min(100, spo2))
     return round(spo2, 1)
 
-def read_vitals(duration=10, sample_rate=25, settle_time=2):
-    """Collects samples for `duration` seconds (plus a settle_time discard period), returns (bpm, spo2)."""
-    setup_sensor()
+def read_vitals(duration=10, sample_rate=25, settle_time=4):
+    try:
+        setup_sensor()
+    except OSError as e:
+        print(f"[VITALS] MAX30102 setup failed: {e}")
+        return None, None
+
     ir_window = deque(maxlen=duration * sample_rate)
     red_window = deque(maxlen=duration * sample_rate)
 
@@ -105,12 +109,17 @@ def read_vitals(duration=10, sample_rate=25, settle_time=2):
     total_samples = 0
 
     while time.time() - start < (duration + settle_time):
-        red, ir = read_fifo()
+        try:
+            red, ir = read_fifo()
+        except OSError as e:
+            print(f"[VITALS] MAX30102 read failed: {e}")
+            return None, None
+
         elapsed = time.time() - start
         total_samples += 1
         if detect_finger(ir):
             finger_detected_count += 1
-            if elapsed >= settle_time:  # discard the settling period
+            if elapsed >= settle_time:
                 ir_window.append(ir)
                 red_window.append(red)
         time.sleep(1.0 / sample_rate)
