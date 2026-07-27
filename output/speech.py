@@ -43,7 +43,7 @@ def listen_offline(timeout=5):
     result = json.loads(vosk_rec.FinalResult())
     return result.get("text", "")
 
-def listen_for_confirmation(timeout=5, retries=2):
+def listen_for_confirmation(timeout=5, retries=4):
     for attempt in range(retries):
         recognizer = sr.Recognizer()
         recognizer.energy_threshold = 100
@@ -63,6 +63,7 @@ def listen_for_confirmation(timeout=5, retries=2):
                 print(f"[DEBUG] Offline heard: '{text}'")
             except Exception as offline_e:
                 print(f"[DEBUG] Offline STT also failed: {offline_e}")
+                time.sleep(1)
                 continue
         except sr.WaitTimeoutError:
             print("[DEBUG] Timed out — no speech detected in time")
@@ -72,7 +73,7 @@ def listen_for_confirmation(timeout=5, retries=2):
             return None
         except Exception as e:
             print(f"[DEBUG] Mic error (attempt {attempt+1}/{retries}): {e}")
-            time.sleep(0.5)
+            time.sleep(1)
             continue
 
         if not text:
