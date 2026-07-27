@@ -54,7 +54,7 @@ def report_vitals():
 
     show_cycling_screens(screens, interval=2.5)
 
-def handle_frame(img):
+def handle_frame(img, cap):
     global _session_active, _prompted_this_session, _empty_frame_count
 
     results = recognize(img)
@@ -104,7 +104,7 @@ def handle_frame(img):
             say("Please look at the camera. Enrollment starting shortly.")
             show_text("Enrollment starting")
             name = input("Enter patient name for enrollment: ")
-            enroll_from_camera(name)
+            enroll_from_camera(name, cap)
             say(f"Enrolled {name}. Thank you.")
             show_text(f"Enrolled {name}")
             _history.clear()
