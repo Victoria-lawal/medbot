@@ -2,6 +2,7 @@ import subprocess
 import speech_recognition as sr
 import json
 import os
+import time
 
 def say(text, voice="en+f3", speed=150):
     espeak = subprocess.Popen(
