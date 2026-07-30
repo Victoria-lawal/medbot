@@ -5,6 +5,7 @@ from patient_id.enroll import enroll_from_camera
 from patient_id.vitals import read_all_vitals
 from output.speech import say, listen_for_confirmation
 from output.display import show_text, show_cycling_screens
+from patient_id.records import log_reading
 
 _history = deque(maxlen=5)
 _last_action = {"outcome": None, "time": 0}
@@ -31,6 +32,8 @@ def report_vitals():
     show_text("Reading vitals...")
     temp, bpm, spo2 = read_all_vitals(duration=10, sample_rate=25, settle_time=4)
 
+    log_reading(patient_name, temp, bpm, spo2)
+    
     parts = []
     screens = []
 
