@@ -27,11 +27,10 @@ def _stable_outcome():
         return best_name
     return None
 
-def report_vitals():
+def report_vitals(patient_name):
     say("Please place your hand on my left palm for a reading.")
     show_text("Reading vitals...")
     temp, bpm, spo2 = read_all_vitals(duration=10, sample_rate=25, settle_time=4)
-
     log_reading(patient_name, temp, bpm, spo2)
     
     parts = []
@@ -111,7 +110,7 @@ def handle_frame(img, cap):
             say(f"Enrolled {name}. Thank you.")
             show_text(f"Enrolled {name}")
             _history.clear()
-            report_vitals()
+            report_vitals(name)
         else:
             say("Okay, not enrolling.")
             show_text("Enrollment cancelled")
