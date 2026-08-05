@@ -97,7 +97,7 @@ def handle_frame(img, cap):
         message = f"Hello, {outcome}"
         say(message)
         show_text(message)
-        report_vitals()
+        report_vitals(outcome)
     else:
         say("I don't recognize you. Would you like to enroll? Please say yes or no.")
         show_text("Unknown patient", "Say yes to enroll")
