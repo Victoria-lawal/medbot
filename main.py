@@ -22,17 +22,28 @@ def main():
         return
     print("Medbot running. Ctrl+C to quit.")
     last_run = 0
+    
+    # Warm up camera buffer
+    for _ in range(5):
+        cap.read()
+
     try:
         while True:
             ret, frame = cap.read()
             if not ret:
+                print("Warning: Failed to grab frame from camera")
+                time.sleep(0.1)
                 continue
+
             now = time.time()
             if now - last_run >= RECOGNITION_INTERVAL:
+                print("[DEBUG] Processing frame...")
                 handle_frame(frame, cap)
+                print("[DEBUG] Frame processed successfully.")
                 last_run = now
+
     except KeyboardInterrupt:
-        print("Stopping...")
+        print("\nStopping...")
     finally:
         cap.release()
 
